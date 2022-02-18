@@ -27,12 +27,13 @@ class StatsRow:
 
 
 class StatsSampledTable:
+    # base implementation of https://en.wikipedia.org/wiki/Reservoir_sampling
     def __init__(self, size):
         self.size = size
         self.i = 0
         self.data = []
 
-    def add(self, value: dict, r = None):
+    def add(self, value: dict, r=None):
         if self.i < self.size:
             self.data.append(StatsRow(**value, batch_id=self.i // 4))
         else:

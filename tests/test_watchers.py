@@ -1,14 +1,15 @@
 import contextlib
+import os
+import shutil
+import tempfile
 
+import numpy as np
 import pandas as pd
 import pytest
 import torch
 from tensorboardX import SummaryWriter
 from torch import nn
 from torchvision.models import resnet18
-import tempfile
-import shutil
-import os
 
 from hookandlook.hooks import forward_hook_check_value_in_range
 from hookandlook.utils import add_to_inputs, call_with_args_or_kwargs
@@ -174,3 +175,19 @@ def test_tensorboard(inputs_or_outputs):
     files = os.listdir(temp_dir)
     assert len(files) == 1
     shutil.rmtree(temp_dir)
+
+
+def test_stats_are_sorted_by_batch_id():
+    model = FixtureNet()
+    watched_model = Wrapper.wrap_model(model, reserve_size=20)
+    for i in range(10):
+        _ = watched_model(torch.rand(1, 8) + i)
+
+    for df in (watched_model.watcher.inputs_df, watched_model.watcher.outputs_df):
+        batch_ids = df['batch_id'].values
+        assert all(batch_ids == sorted(batch_ids))
+
+    # only applicable for inputs
+    df = watched_model.watcher.inputs_df
+    values = df[df.stat_name == 'mean']['value'].values
+    np.testing.assert_allclose(values, sorted(values), atol=1e-5, rtol=0)

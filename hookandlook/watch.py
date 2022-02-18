@@ -88,11 +88,11 @@ class ModelWatcher:
 
     @property
     def inputs_df(self):
-        return self.storage['input'].as_dataframe()
+        return self.storage['input'].as_dataframe().sort_values('batch_id')
 
     @property
     def outputs_df(self):
-        return self.storage['output'].as_dataframe()
+        return self.storage['output'].as_dataframe().sort_values('batch_id')
 
     def reset_storage(self):
         storage = self.storage

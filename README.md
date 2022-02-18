@@ -51,7 +51,7 @@ output_stats = model.watcher.output_df
 
 # ...or visualize them with tensorboard
 writer = SummaryWriter()
-for label, batch_ids, values in model.watcher.iterate_over_stats(inputs=inputs_or_outputs):
+for label, batch_ids, values in model.watcher.iterate_over_stats(inputs=True):
     for x, y in zip(batch_ids, values):
         writer.add_scalar(tag=label, scalar_value=y, global_step=x)
 
