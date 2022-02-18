@@ -169,6 +169,6 @@ class ModelWatcher:
             batch_ids = subset['batch_id'].values
             values = subset['value'].values
             label = f'{stat_name}' \
-                    f'{"_" + input_name if input_name_is_informative else ""}' \
-                    f'{"_" + module_name if module_name_is_informative else ""}'
+                    f'{"_" + str(input_name) if input_name_is_informative else ""}' \
+                    f'{"_" + str(module_name) if module_name_is_informative else ""}'
             yield label, batch_ids, values
