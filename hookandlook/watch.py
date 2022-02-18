@@ -45,6 +45,18 @@ class Wrapper:
         else:
             self.__dict__[key] = value
 
+    def to(self, x):
+        self._obj = self._obj.to(x)
+        return self
+
+    def cpu(self):
+        self._obj = self._obj.cpu()
+        return self
+
+    def cuda(self):
+        self._obj = self._obj.cuda()
+        return self
+
     @classmethod
     def wrap_model(cls,
                    model: nn.Module,

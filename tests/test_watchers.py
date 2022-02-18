@@ -191,3 +191,14 @@ def test_stats_are_sorted_by_batch_id():
     df = watched_model.watcher.inputs_df
     values = df[df.stat_name == 'mean']['value'].values
     np.testing.assert_allclose(values, sorted(values), atol=1e-5, rtol=0)
+
+
+def test_model_to_device():
+    model = FixtureNet()
+    watched_model = Wrapper.wrap_model(model)
+
+    watched_model = watched_model.to(torch.device('cpu'))
+    assert isinstance(watched_model, Wrapper)
+
+    watched_model = watched_model.cpu()
+    assert isinstance(watched_model, Wrapper)
