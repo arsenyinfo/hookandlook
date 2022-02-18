@@ -57,6 +57,14 @@ class Wrapper:
         self._obj = self._obj.cuda()
         return self
 
+    def train(self, x):
+        self._obj = self._obj.train(x)
+        return self
+
+    def eval(self):
+        self._obj = self._obj.eval()
+        return self
+
     @classmethod
     def wrap_model(cls,
                    model: nn.Module,

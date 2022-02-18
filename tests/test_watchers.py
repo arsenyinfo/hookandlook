@@ -193,7 +193,7 @@ def test_stats_are_sorted_by_batch_id():
     np.testing.assert_allclose(values, sorted(values), atol=1e-5, rtol=0)
 
 
-def test_model_to_device():
+def test_module_specific_methods():
     model = FixtureNet()
     watched_model = Wrapper.wrap_model(model)
 
@@ -201,4 +201,10 @@ def test_model_to_device():
     assert isinstance(watched_model, Wrapper)
 
     watched_model = watched_model.cpu()
+    assert isinstance(watched_model, Wrapper)
+
+    watched_model = watched_model.train(True)
+    assert isinstance(watched_model, Wrapper)
+
+    watched_model = watched_model.eval()
     assert isinstance(watched_model, Wrapper)
