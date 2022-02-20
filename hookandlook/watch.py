@@ -84,8 +84,9 @@ class Wrapper:
         return self._obj
 
 
-def _add_module_name(d: dict, name):
+def _add_module_attributes(d: dict, name, is_training):
     d['module_name'] = name
+    d['is_training'] = is_training
     return d
 
 
@@ -134,16 +135,17 @@ class ModelWatcher:
             if not inputs:
                 warn('Empty inputs. It may happen when model is called with keyword arguments', EmptyInputsHookWarning)
 
+            is_training = module.training
             if len(inputs) == len(outputs):
                 # if inputs and outputs have the same length, we aim to synchronize them, so same batch stats are stored
                 for x, y in zip(self.aggregator(inputs), self.aggregator(outputs)):
-                    r = self.storage['input'].add(_add_module_name(x, name))
-                    self.storage['output'].add(_add_module_name(y, name), r=r)
+                    r = self.storage['input'].add(_add_module_attributes(x, name, is_training=is_training))
+                    self.storage['output'].add(_add_module_attributes(y, name, is_training=is_training), r=r)
             else:
                 for x in self.aggregator(inputs):
-                    self.storage['input'].add(_add_module_name(x, name))
+                    self.storage['input'].add(_add_module_attributes(x, name, is_training=is_training))
                 for x in self.aggregator(outputs):
-                    self.storage['output'].add(_add_module_name(x, name))
+                    self.storage['output'].add(_add_module_attributes(x, name, is_training=is_training))
 
         def backward_hook(module, grad_inputs, grad_outputs):
             pass
@@ -173,10 +175,11 @@ class ModelWatcher:
         df = self.inputs_df if inputs else self.outputs_df
         input_name_is_informative = len(df.input_name.value_counts()) > 1
         module_name_is_informative = len(df.module_name.value_counts()) > 1
-        for (input_name, stat_name, module_name), subset in df.groupby(['input_name', 'stat_name', 'module_name']):
+        grouped = df.groupby(['input_name', 'stat_name', 'module_name', 'is_training'])
+        for (input_name, stat_name, module_name, training_mode), subset in grouped:
             batch_ids = subset['batch_id'].values
             values = subset['value'].values
-            label = f'{stat_name}' \
+            label = f'{"train" if training_mode else "eval"}_{stat_name}' \
                     f'{"_" + str(input_name) if input_name_is_informative else ""}' \
                     f'{"_" + str(module_name) if module_name_is_informative else ""}'
             yield label, batch_ids, values

@@ -13,6 +13,7 @@ class StatsRow:
     stat_name: str
     module_name: Union[str, int]
     value: Union[float, np.ndarray, torch.Tensor]
+    is_training: bool
     metadata = None
     batch_id: int = None
 
@@ -21,6 +22,7 @@ class StatsRow:
                 'stat_name': self.stat_name,
                 'module_name': self.module_name,
                 'value': self.value,
+                'is_training': self.is_training,
                 'metadata': self.metadata,
                 'batch_id': self.batch_id
                 }
