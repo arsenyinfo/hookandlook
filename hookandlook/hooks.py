@@ -1,4 +1,4 @@
-from typing import Callable, Sequence
+from typing import Callable, Optional, Sequence
 
 
 def compose_hooks(hooks: Sequence[Callable[..., None]]) -> Callable[..., None]:
@@ -9,7 +9,7 @@ def compose_hooks(hooks: Sequence[Callable[..., None]]) -> Callable[..., None]:
     return composite_hook
 
 
-def forward_hook_check_value_in_range(min_value: float, max_value: float, check_input: bool = True):
+def forward_hook_check_value_in_range(min_value: Optional[float], max_value: Optional[float], check_input: bool = True):
     min_value = min_value if min_value is not None else float("-inf")
     max_value = max_value if max_value is not None else float("inf")
 

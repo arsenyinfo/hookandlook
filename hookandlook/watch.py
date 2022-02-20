@@ -107,19 +107,19 @@ class ModelWatcher:
         self.initialize(forward_hooks, backward_hooks)
         self.aggregator = Aggregator()
 
-    @property
-    def inputs_df(self):
-        df = self.storage['input'].as_dataframe()
+    def _get_sorted_df(self, key):
+        df = self.storage[key].as_dataframe()
         if len(df):
             df = df.sort_values('batch_id')
         return df
 
     @property
+    def inputs_df(self):
+        return self._get_sorted_df('input')
+
+    @property
     def outputs_df(self):
-        df = self.storage['output'].as_dataframe()
-        if len(df):
-            df = df.sort_values('batch_id')
-        return df
+        return self._get_sorted_df('output')
 
     def reset_storage(self):
         storage = self.storage

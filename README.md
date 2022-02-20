@@ -1,6 +1,7 @@
 # HookAndLook 🎣
 
-`hookandlook` is a tool helping to gather stats and run checks during training deep learning models with Pytorch.
+`hookandlook` is a tool helping to gather stats and run checks during training deep learning models with Pytorch 
+using hooks.
 
 Features:
 
@@ -21,6 +22,7 @@ or
 ## Usage
 
 ```python
+import pandas as pd
 from hookandlook.watch import Wrapper
 from hookandlook import hooks
 
@@ -30,9 +32,9 @@ model = MyTorchModel()
 model = Wrapper.wrap_model(model)
 
 # or with additional selected hooks
-check_positive = hooks.forward_hook_check_value_in_range(min_value=0)
+check_positive = hooks.forward_hook_check_value_in_range(min_value=0, max_value=None)
 check_train_mode = hooks.backward_hook_check_if_train_mode()
-model = Wrapper.wrap_model(model, 
+model = Wrapper.wrap_model(model,
                            forward_hooks=[check_positive],
                            backward_hooks=[check_train_mode],
                            )
@@ -44,8 +46,8 @@ for x, y in train_loader:
     loss.backward()
     optimizer.step()
     model.zero_grad()
-    
-# get stats and analyze them manually
+
+# get stats as pandas dataframes and analyze them manually
 input_stats = model.watcher.input_df
 output_stats = model.watcher.output_df
 
@@ -54,7 +56,6 @@ writer = SummaryWriter()
 for label, batch_ids, values in model.watcher.iterate_over_stats(inputs=True):
     for x, y in zip(batch_ids, values):
         writer.add_scalar(tag=label, scalar_value=y, global_step=x)
-
 
 # detach the watcher from the model if needed
 model = model.detach_hooks()
