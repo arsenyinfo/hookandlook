@@ -208,3 +208,53 @@ def test_module_specific_methods():
 
     watched_model = watched_model.eval()
     assert isinstance(watched_model, Wrapper)
+
+
+def test_listeners():
+    class Counter:
+        def __init__(self, value=None):
+            self.count = 0
+            self.value = value
+
+        def __call__(self, x: dict):
+            if self.value is not None and x['stat_name'] == 'mean':
+                np.testing.assert_allclose(x['value'], self.value, atol=1e-5, rtol=0)
+            self.count += 1
+
+    model = FixtureNet()
+    batch = torch.rand(1, 8)
+
+    cnt_input = Counter(value=batch.mean())
+    cnt_output = Counter(value=None)
+    watched_model = Wrapper.wrap_model(model,
+                                       forward_input_listeners=[cnt_input],
+                                       forward_output_listeners=[cnt_output],
+                                       )
+    for _ in range(3):
+        _ = watched_model(batch)
+
+    assert cnt_input.count == 3 * 4  # 4 stats per batch
+    assert cnt_output.count == 3 * 4
+
+
+def test_listeners_for_tensorboard():
+    model = FixtureNet()
+    batch = torch.rand(1, 8)
+
+    temp_dir = tempfile.mkdtemp()
+    writer = SummaryWriter(logdir=temp_dir)
+
+    def tensorboard_listener(x: dict):
+        if x['stat_name'] == 'mean':
+            writer.add_scalar(tag=x['stat_name'], scalar_value=x['value'])
+
+    watched_model = Wrapper.wrap_model(model,
+                                       forward_input_listeners=[tensorboard_listener],
+                                       )
+    for _ in range(3):
+        _ = watched_model(batch)
+
+    writer.close()
+    files = os.listdir(temp_dir)
+    assert len(files) == 1
+    shutil.rmtree(temp_dir)
