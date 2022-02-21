@@ -71,12 +71,20 @@ class Wrapper:
                    wrap_children=False,
                    forward_hooks=None,
                    backward_hooks=None,
+                   forward_input_listeners=None,
+                   forward_output_listeners=None,
                    reserve_size=1000,
                    ):
         if isinstance(model, torch.jit.ScriptModule) and wrap_children:
             raise WrapperError('Cannot wrap children of torch.jit.ScriptModule')
-        return cls(model, ModelWatcher(model, wrap_children=wrap_children, forward_hooks=forward_hooks,
-                                       backward_hooks=backward_hooks, reserve_size=reserve_size))
+        return cls(model, ModelWatcher(model,
+                                       wrap_children=wrap_children,
+                                       forward_hooks=forward_hooks,
+                                       backward_hooks=backward_hooks,
+                                       reserve_size=reserve_size,
+                                       input_storage_listeners=forward_input_listeners,
+                                       output_storage_listeners=forward_output_listeners,
+                                       ))
 
     def detach_hooks(self):
         self._obj._forward_hooks = OrderedDict()
@@ -97,6 +105,8 @@ class ModelWatcher:
                  wrap_children=True,
                  forward_hooks=None,
                  backward_hooks=None,
+                 input_storage_listeners=None,
+                 output_storage_listeners=None,
                  ):
         self._model = model
         # we store stats in two-level hierarchy: module and stat name
@@ -106,6 +116,7 @@ class ModelWatcher:
         self.wrap_children = wrap_children
         self.initialize(forward_hooks, backward_hooks)
         self.aggregator = Aggregator()
+        self.listeners = {'input': input_storage_listeners or [], 'output': output_storage_listeners or []}
 
     def _get_sorted_df(self, key):
         df = self.storage[key].as_dataframe()
@@ -126,6 +137,11 @@ class ModelWatcher:
         self.storage = {k: StatsSampledTable(size=self.storage_size) for k in ('input', 'output')}
         return storage
 
+    def _add_to_storage(self, key, item, r=None) -> int:
+        for listener in self.listeners[key]:
+            listener(item)
+        return self.storage[key].add(item, r=r)
+
     def get_storage_hook(self, name, forward=True):
         """
         This hook is used to store statistics of model's forward/backward passes
@@ -139,13 +155,13 @@ class ModelWatcher:
             if len(inputs) == len(outputs):
                 # if inputs and outputs have the same length, we aim to synchronize them, so same batch stats are stored
                 for x, y in zip(self.aggregator(inputs), self.aggregator(outputs)):
-                    r = self.storage['input'].add(_add_module_attributes(x, name, is_training=is_training))
-                    self.storage['output'].add(_add_module_attributes(y, name, is_training=is_training), r=r)
+                    r = self._add_to_storage('input', _add_module_attributes(x, name, is_training=is_training))
+                    self._add_to_storage('output', _add_module_attributes(y, name, is_training=is_training), r=r)
             else:
                 for x in self.aggregator(inputs):
-                    self.storage['input'].add(_add_module_attributes(x, name, is_training=is_training))
+                    self._add_to_storage('input', _add_module_attributes(x, name, is_training=is_training))
                 for x in self.aggregator(outputs):
-                    self.storage['output'].add(_add_module_attributes(x, name, is_training=is_training))
+                    self._add_to_storage('output', _add_module_attributes(x, name, is_training=is_training))
 
         def backward_hook(module, grad_inputs, grad_outputs):
             pass
