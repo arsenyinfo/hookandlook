@@ -67,7 +67,7 @@ The library is based on "callback hell" design pattern, so it is possible to use
 E.g. if you'd like to store all the stats - not just subsample - in your tensorboard, you can use `listeners`:
 
 ```python
-writer = SummaryWriter(logdir=temp_dir)
+writer = SummaryWriter()
 
 def tensorboard_listener(x: dict):
     # x is a dict with keys: 'input_name', 'stat_name', 'value', 'module_name', 'is_training'
@@ -76,8 +76,8 @@ def tensorboard_listener(x: dict):
 watched_model = Wrapper.wrap_model(model,
                                    forward_input_listeners=[tensorboard_listener],
                                    )
-
 ```
+One can use the same approach for more sophisticated scenarios, e.g. anomaly detection on streaming data to catch weird inputs.
 
 ## Contributing
 
