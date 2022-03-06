@@ -195,6 +195,7 @@ def test_stats_are_sorted_by_batch_id():
 
 def test_module_specific_methods():
     model = FixtureNet()
+    model.eval()
     watched_model = Wrapper.wrap_model(model)
 
     watched_model = watched_model.to(torch.device('cpu'))
@@ -203,7 +204,16 @@ def test_module_specific_methods():
     watched_model = watched_model.cpu()
     assert isinstance(watched_model, Wrapper)
 
+    watched_model = watched_model.train()
+    assert isinstance(watched_model, Wrapper)
+
     watched_model = watched_model.train(True)
+    assert isinstance(watched_model, Wrapper)
+
+    watched_model = watched_model.requires_grad_()
+    assert isinstance(watched_model, Wrapper)
+
+    watched_model = watched_model.requires_grad_(True)
     assert isinstance(watched_model, Wrapper)
 
     watched_model = watched_model.eval()
