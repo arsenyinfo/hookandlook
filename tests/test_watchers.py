@@ -195,7 +195,6 @@ def test_stats_are_sorted_by_batch_id():
 
 def test_module_specific_methods():
     model = FixtureNet()
-    model.eval()
     watched_model = Wrapper.wrap_model(model)
 
     watched_model = watched_model.to(torch.device('cpu'))
