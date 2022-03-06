@@ -57,12 +57,16 @@ class Wrapper:
         self._obj = self._obj.cuda()
         return self
 
-    def train(self, x):
+    def train(self, x: bool = True):
         self._obj = self._obj.train(x)
         return self
 
     def eval(self):
         self._obj = self._obj.eval()
+        return self
+
+    def requires_grad_(self, x: bool = True):
+        self._obj = self._obj.requires_grad_(x)
         return self
 
     @classmethod

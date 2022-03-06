@@ -203,7 +203,16 @@ def test_module_specific_methods():
     watched_model = watched_model.cpu()
     assert isinstance(watched_model, Wrapper)
 
+    watched_model = watched_model.train()
+    assert isinstance(watched_model, Wrapper)
+
     watched_model = watched_model.train(True)
+    assert isinstance(watched_model, Wrapper)
+
+    watched_model = watched_model.requires_grad_()
+    assert isinstance(watched_model, Wrapper)
+
+    watched_model = watched_model.requires_grad_(True)
     assert isinstance(watched_model, Wrapper)
 
     watched_model = watched_model.eval()
